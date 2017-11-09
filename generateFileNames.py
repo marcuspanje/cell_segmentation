@@ -17,14 +17,12 @@ def getLabeledName(fName):
 
 random.seed(10)
 vgh = os.listdir('cs221_dataset/VGH_Training/')
-vgh = vgh[0:-1]
-shuffle(vgh) #remove labeled
-vgh = ['cs221_dataset/VGH_Training/' + s for s in vgh]
+vgh = ['cs221_dataset/VGH_Training/' + s for s in vgh if s[-3:] == 'jpg']
+shuffle(vgh) 
 
 nki = os.listdir('cs221_dataset/NKI_Training/')
-nki = nki[0:-1]
-shuffle(nki) #remove labeled 
-nki = ['cs221_dataset/NKI_Training/' + s for s in nki]
+nki = ['cs221_dataset/NKI_Training/' + s for s in nki if s[-3:] == 'jpg']
+shuffle(nki)
 
 percentage = (70, 20, 10) #train, test, validation
 
