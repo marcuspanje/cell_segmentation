@@ -15,11 +15,13 @@ def getLabeledName(fName):
 #get dictionary of train,test,validate file names
 
 vgh = os.listdir('cs221_dataset/VGH_Training/')
-shuffle(vgh[0:-1]) #remove labeled
+vgh = vgh[0:-1]
+shuffle(vgh) #remove labeled
 vgh = ['cs221_dataset/VGH_Training/' + s for s in vgh]
 
 nki = os.listdir('cs221_dataset/NKI_Training/')
-shuffle(nki[0:-1]) #remove labeled 
+nki = nki[0:-1]
+shuffle(nki) #remove labeled 
 nki = ['cs221_dataset/NKI_Training/' + s for s in nki]
 
 percentage = (70, 20, 10) #train, test, validation
