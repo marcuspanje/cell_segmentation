@@ -2,3 +2,6 @@
 *.aux
 *.pdf
 *.swp
+cs221_dataset
+__pycache__
+.DS_Store
