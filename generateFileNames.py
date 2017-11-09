@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import random
 from random import shuffle
 from math import ceil
 import json
@@ -14,6 +15,7 @@ def getLabeledName(fName):
 
 #get dictionary of train,test,validate file names
 
+random.seed(10)
 vgh = os.listdir('cs221_dataset/VGH_Training/')
 vgh = vgh[0:-1]
 shuffle(vgh) #remove labeled
