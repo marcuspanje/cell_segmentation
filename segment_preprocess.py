@@ -118,7 +118,7 @@ class SegList(torch.utils.data.Dataset):
     def __getitem__(self, index):
         data = [Image.open(join(self.data_dir, self.image_list[index]))]
         if self.label_list is not None:
-            labelImage = Image.open(join(self.data_dir, self.label_list[index])))
+            labelImage = Image.open(join(self.data_dir, self.label_list[index]))
             isnotblack =  np.logical_or((labelImage[:,:,0] > 50), (labelImage[:,:,1] > 50))
             isblack = np.logical_not(isnotblack)
             isred = isnotblack * (labelImage[:,:,0] > labelImage[:,:,1])
