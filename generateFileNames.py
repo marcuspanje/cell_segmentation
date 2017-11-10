@@ -1,26 +1,20 @@
 #!/usr/bin/env python
 import os
+import random
 from random import shuffle
 from math import ceil
 import json
 
-#eg: given 'cs221_dataset/VGH_Training/0.1_280_5_5.jpg', 
-#returns: 'cs221_dataset/VGH_Training/labeled/1_280_5_5.jpg'
-def getLabeledName(fName):
-  findString = 'Training/'
-  i = fName.find(findString) + len(findString)
-  labeledName = fName[0:i] + 'labeled/' + fName[i+2:]
-  return labeledName
-
 #get dictionary of train,test,validate file names
 
+random.seed(10)
 vgh = os.listdir('cs221_dataset/VGH_Training/')
-shuffle(vgh[0:-1]) #remove labeled
-vgh = ['cs221_dataset/VGH_Training/' + s for s in vgh]
+vgh = ['cs221_dataset/VGH_Training/' + s for s in vgh if s[-3:] == 'jpg']
+shuffle(vgh) 
 
 nki = os.listdir('cs221_dataset/NKI_Training/')
-shuffle(nki[0:-1]) #remove labeled 
-nki = ['cs221_dataset/NKI_Training/' + s for s in nki]
+nki = ['cs221_dataset/NKI_Training/' + s for s in nki if s[-3:] == 'jpg']
+shuffle(nki)
 
 percentage = (70, 20, 10) #train, test, validation
 

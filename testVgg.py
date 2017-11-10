@@ -11,7 +11,7 @@ from ImageNetClassNames import classNames
 from PIL import Image
 import pdb
 import json
-from generateFileNames import getLabeledName
+from util import getLabeledName
 
 use_cuda = torch.cuda.is_available() 
 print("use_cuda: {}".format(use_cuda))
