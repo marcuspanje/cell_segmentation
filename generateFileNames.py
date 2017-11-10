@@ -9,10 +9,12 @@ import json
 
 random.seed(10)
 vgh = os.listdir('cs221_dataset/VGH_Training/')
+vgh.sort()
 vgh = ['cs221_dataset/VGH_Training/' + s for s in vgh if s[-3:] == 'jpg']
 shuffle(vgh) 
 
 nki = os.listdir('cs221_dataset/NKI_Training/')
+nki.sort()
 nki = ['cs221_dataset/NKI_Training/' + s for s in nki if s[-3:] == 'jpg']
 shuffle(nki)
 
@@ -33,6 +35,6 @@ shuffle(validate)
 fileNames = {'train': train, 'test': test, 'validate': validate}
 
 with open('fileNames.json', 'w') as f:
-  json.dump(fileNames, f, indent=1)
+  json.dump(fileNames, f, indent=1, sort_keys=True)
   
 
