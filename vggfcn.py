@@ -11,7 +11,7 @@ from ImageNetClassNames import classNames
 from PIL import Image
 import pdb
 import json
-from generateFileNames import getLabeledName
+from util import getLabeledName
 
 use_cuda = torch.cuda.is_available() 
 print("use_cuda: {}".format(use_cuda))
@@ -20,9 +20,30 @@ vgg = models.vgg16(True)
 if use_cuda:
   vgg.cuda()
 
+class vggfcn(nn.Module):
+  def __init__(self, vgg):
+    super(vggfcn, self).__init__()
+    
+    self.features = vgg.features
+    self.classifier = None
+    self.fcn = nn.Sequential(
+      nn.Dropout(),
+      nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(0.5, 0.5), padding=(1, 1))
+    )
+
+    def forward(self, x):
+      x = x.features(x)
+      x = x.view(x.size(0), -1)
+      x = x.fcn(x)
+      return x
+    
+
+
+
 path = 'stuff/'
 fNames = ['cat1.jpeg', 'dog1.jpeg']
 fNames = [path + name for name in fNames]
+
 
 #f = open('fileNames.json', 'r')
 #allNames = json.load(f)
