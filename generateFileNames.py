@@ -33,6 +33,6 @@ shuffle(validate)
 fileNames = {'train': train, 'test': test, 'validate': validate}
 
 with open('fileNames.json', 'w') as f:
-  json.dump(fileNames, f, indent=1)
+  json.dump(fileNames, f, indent=1, sort_keys=True)
   
 
