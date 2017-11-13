@@ -20,14 +20,14 @@ vgg = models.vgg16(True)
 if use_cuda:
   vgg.cuda()
 
-#path = 'images/'
-#fNames = ['cat1.jpeg', 'dog1.jpeg']
-#fNames = [path + name for name in fNames]
+path = 'stuff/'
+fNames = ['cat1.jpeg', 'dog1.jpeg']
+fNames = [path + name for name in fNames]
 
-f = open('fileNames.json', 'r')
-allNames = json.load(f)
-f.close()
-fNames = [allNames['train'][0], getLabeledName(allNames['test'][0])]
+#f = open('fileNames.json', 'r')
+#allNames = json.load(f)
+#f.close()
+#fNames = [allNames['train'][0], getLabeledName(allNames['test'][0])]
 
 #https://github.com/alexis-jacq/Pytorch-Tutorials/blob/cd17b027b1c5daf19a94d586cd5c4c573d6c287e/Neural_Style.py#L26
 def load(fileName):
@@ -36,6 +36,7 @@ def load(fileName):
   loader = transforms.Compose([
     transforms.CenterCrop(min(im.size)), # make square
     transforms.Scale((224,224)),  # scale to VGG input size
+    #transforms.Scale((224)),  # scale to VGG input size
     transforms.ToTensor()])
     
   im = Variable(loader(im)).type(dtype)
