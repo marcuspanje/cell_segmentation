@@ -7,19 +7,19 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 import math
-from ImageNetClassNames import classNames
+#from ImageNetClassNames import classNames.type(dtype)
 from PIL import Image
 import pdb
 import json
-from util import getLabeledName, load
+from util import * 
 
 use_cuda = torch.cuda.is_available() 
 print("use_cuda: {}".format(use_cuda))
 dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
-class vggfcn(nn.Module):
+class Vggfcn(nn.Module):
   def __init__(self, vgg):
-    super(vggfcn, self).__init__()
+    super(Vggfcn, self).__init__()
     
     self.features = vgg.features
     #self.classifier = vgg.classifier
@@ -42,17 +42,11 @@ class vggfcn(nn.Module):
     return x
     
 vgg = models.vgg16(True)
-vggfcn = vggfcn(vgg)
+vggfcn = Vggfcn(vgg)
 
 with open('fileNames.json', 'r') as f:
   allNames = json.load(f)
 
-name = allNames['train'][0]
-
-print('analyzing {}'.format(name))
-im = load(name, dtype)
-out = vggfcn.forward(im)
-print(out)
 
 # N is batch size
 # dim1 - horizontal dimension
@@ -61,33 +55,42 @@ print(out)
 batch_size = 64
 dim1, dim2, num_chan= 224, 224, 3
 
-# Create random Tensors to hold inputs and outputs, and wrap them in Variables.
-x = Variable(torch.randn(N, dim1, dim2, num_chan))
-y = Variable(torch.randn(N, dim1, dim2), requires_grad=False)
 
-
-
-loss_fn = torch.nn.CrossEntropyLoss()
 num_train = len(allNames['train'])
+num_batch = int(math.ceil(num_train/batch_size))
 
-train_ex = torch.FloatTensor(num_train,dim1,dim2,num_chan)
+train_ex = torch.FloatTensor(num_train, num_chan, dim2, dim1).type(dtype)
+label_ex = torch.FloatTensor(num_train, num_chan, dim2, dim1).type(dtype)
 for i in range(len(allNames['train'])):
-  train_ex[i] = load(filename,dtype)
+  filename = allNames['train'][i]
+  train_ex[i] = load(filename, dtype)
+  label_ex[i] = get_labels(getLabeledName(filename), dtype)
 
-train_indices = np.arange(N)
+train_indices = np.arange(num_train)
 np.random.shuffle(train_indices)
 
 learning_rate = 1e-4
-optimizer = torch.optim.SGD(vggfcn.parameters() ,lr = learning_rate)
-epochs = 500
+momentum = 0.9
+epochs = 5
+
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(vggfcn.parameters() ,lr = learning_rate, momentum = 0.9)
+print('learning starting')
 for t in range(epochs):
 
-
   #make sure we iterate over the dataset once
-  for i in range(int(math.ceil(num_train/batch_size))):
+  for i in range(num_batch):
     start_idx = (i*batch_size)%num_train
-    idx = train_indicies[start_idx:start_idx+batch_size]
+    end_idx = min(start_idx + batch_size, num_train-1)
+    idx = train_indices[start_idx:end_idx]
+    inputs = Variable(train_ex[idx,:,:,:])
+    labels = Variable(label_ex[idx,:,:,:])
+    optimizer.zero_grad()
+    outputs = vggfcn(inputs)
 
-    y_pred = vggfcn2(Variable(train_ex[idx,:,:,:]))
-     
-    loss = (y_pred, y)
+    loss = criterion(outputs, labels)
+    loss.backward()
+    optimizer.step()
+    print('epoch: %d, batch: %d, loss: %.3f' % (t,i,loss.data[0]))
+
+

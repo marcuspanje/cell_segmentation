@@ -1,4 +1,5 @@
 #various util functions
+import torch
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from PIL import Image
@@ -18,7 +19,7 @@ def getLabeledName(fName):
 #input: filename of an image
 #loads, transforms image for nnet 
 #output: pytorch tensor 
-def load(name, dtype):
+def load(name, dtype=torch.FloatTensor):
   im = Image.open(name)
   
   loader = transforms.Compose([
@@ -34,7 +35,7 @@ def load(name, dtype):
 
 #input: filename
 #output: pytorch tensor with output variables
-def get_labels(fn, dtype):
+def get_labels(fn, dtype=torch.FloatTensor):
   label_im = load(fn, dtype).numpy()
   
   #Labeling scheme:
@@ -45,5 +46,5 @@ def get_labels(fn, dtype):
   isgreen = isnotblack * (label_im[:,:,0] < label_im[:,:,1])
   label_arr =  0*isred + 1*isgreen + 2*isblack
 
-  return torch.from_numpy(label_im)
+  return torch.from_numpy(label_im).type(dtype)
                                             
