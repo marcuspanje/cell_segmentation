@@ -24,8 +24,51 @@ class vggfcn(nn.Module):
     self.features = vgg.features
     #self.classifier = vgg.classifier
     #ref: https://github.com/wkentaro/pytorch-fcn/blob/master/torchfcn/models/fcn32s.py
+    '''
+    self.features = nn.Sequential(
+      nn.Conv2d(3, 64, 3, padding=100),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(64, 64, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/2
+
+        # conv2
+      nn.Conv2d(64, 128, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(128, 128, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/4
+
+        # conv3
+      nn.Conv2d(128, 256, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(256, 256, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(256, 256, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/8
+
+        # conv4
+      nn.Conv2d(256, 512, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(512, 512, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(512, 512, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.MaxPool2d(2, stride=2, ceil_mode=True),  # 1/16
+
+        # conv5
+      nn.Conv2d(512, 512, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(512, 512, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.Conv2d(512, 512, 3, padding=1),
+      nn.ReLU(inplace=True),
+      nn.MaxPool2d(2, stride=2, ceil_mode=True))  # 1/32
+    '''
+
     self.deconv = nn.Sequential(
-      nn.Conv2d(512, 4096, kernel_size=(35,22)),
+      nn.Conv2d(512, 4096, kernel_size=7),
       nn.ReLU(inplace=True),
       nn.Dropout2d(),
       nn.Conv2d(4096, 4096, 1),
@@ -40,6 +83,7 @@ class vggfcn(nn.Module):
     x = self.features(x)
     print (x.size())
     x = self.deconv(x)
+    x = x[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
     return x
     
 vgg = models.vgg16(True)
