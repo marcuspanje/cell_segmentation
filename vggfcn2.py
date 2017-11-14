@@ -54,4 +54,40 @@ im = load(name, dtype)
 out = vggfcn.forward(im)
 print(out)
 
+# N is batch size
+# dim1 - horizontal dimension
+# dim2 - vertical dimension
+# num_chan - RGB dimension
+batch_size = 64
+dim1, dim2, num_chan= 224, 224, 3
 
+# Create random Tensors to hold inputs and outputs, and wrap them in Variables.
+x = Variable(torch.randn(N, dim1, dim2, num_chan))
+y = Variable(torch.randn(N, dim1, dim2), requires_grad=False)
+
+
+
+loss_fn = torch.nn.CrossEntropyLoss()
+num_train = len(allNames['train'])
+
+train_ex = torch.FloatTensor(num_train,dim1,dim2,num_chan)
+for i in range(len(allNames['train'])):
+  train_ex[i] = load(filename,dtype)
+
+train_indices = np.arange(N)
+np.random.shuffle(train_indices)
+
+learning_rate = 1e-4
+optimizer = torch.optim.SGD(vggfcn.parameters() ,lr = learning_rate)
+epochs = 500
+for t in range(epochs):
+
+
+  #make sure we iterate over the dataset once
+  for i in range(int(math.ceil(num_train/batch_size))):
+    start_idx = (i*batch_size)%num_train
+    idx = train_indicies[start_idx:start_idx+batch_size]
+
+    y_pred = vggfcn2(Variable(train_ex[idx,:,:,:]))
+     
+    loss = (y_pred, y)

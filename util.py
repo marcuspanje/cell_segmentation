@@ -2,6 +2,7 @@
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from PIL import Image
+import numpy as np
 
 #input: fileName string,
 #output: corresponding labeled fileName string
@@ -25,9 +26,24 @@ def load(name, dtype):
     transforms.Scale((224,224)),  # scale to VGG input size
     transforms.ToTensor()])
 
-  im = Variable(loader(im)).type(dtype)
-  im = im.unsqueeze(0)
+  im = loader(im).type(dtype)
+  #im = im.unsqueeze(0)
   return im
 
 
 
+#input: filename
+#output: pytorch tensor with output variables
+def get_labels(fn, dtype):
+  label_im = load(fn, dtype).numpy()
+  
+  #Labeling scheme:
+  #0 tumor cells, 1 non-tumor cells, 2 other
+  isnotblack =  np.logical_or((label_im[:,:,0] > 50), (label_im[:,:,1] > 50))
+  isblack = np.logical_not(isnotblack)
+  isred = isnotblack * (label_im[:,:,0] > label_im[:,:,1])
+  isgreen = isnotblack * (label_im[:,:,0] < label_im[:,:,1])
+  label_arr =  0*isred + 1*isgreen + 2*isblack
+
+  return torch.from_numpy(label_im)
+                                            
