@@ -35,16 +35,16 @@ def load(name, dtype=torch.FloatTensor):
 
 #input: filename
 #output: pytorch tensor with output variables
-def get_labels(fn, dtype=torch.FloatTensor):
+def get_labels(fn, dtype):
   label_im = load(fn, dtype).numpy()
   
   #Labeling scheme:
   #0 tumor cells, 1 non-tumor cells, 2 other
-  isnotblack =  np.logical_or((label_im[:,:,0] > 50), (label_im[:,:,1] > 50))
+  isnotblack =  np.logical_or((label_im[0,:,:] > 50.0/256.0), (label_im[1,:,:] > 50.0/256.0))
   isblack = np.logical_not(isnotblack)
-  isred = isnotblack * (label_im[:,:,0] > label_im[:,:,1])
-  isgreen = isnotblack * (label_im[:,:,0] < label_im[:,:,1])
+  isred = isnotblack * (label_im[0,:,:] > label_im[1,:,:])
+  isgreen = isnotblack * (label_im[0,:,:] < label_im[1,:,:])
   label_arr =  0*isred + 1*isgreen + 2*isblack
 
-  return torch.from_numpy(label_im).type(dtype)
+  return torch.from_numpy(label_arr).type(dtype)
                                             
