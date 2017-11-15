@@ -30,7 +30,7 @@ train = vgh[0:vghTrainLastIndex] + nki[0:nkiTrainLastIndex]
 shuffle(train)
 test = vgh[vghTrainLastIndex:vghTestLastIndex] + nki[nkiTrainLastIndex:nkiTestLastIndex]
 shuffle(test)
-validate = vgh[vghTrainLastIndex:] + nki[nkiTestLastIndex:]
+validate = vgh[vghTestLastIndex:] + nki[nkiTestLastIndex:]
 shuffle(validate)
 fileNames = {'train': train, 'test': test, 'validate': validate}
 
