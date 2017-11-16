@@ -26,7 +26,6 @@ fcn.copy_params_from_vgg16(vgg16)
 with open('fileNames.json', 'r') as f:
   allNames = json.load(f)
 
-
 # N is batch size
 # dim1 - horizontal dimension
 # dim2 - vertical dimension
@@ -59,7 +58,7 @@ np.random.shuffle(train_indices)
 
 learning_rate = 3e-3
 momentum = 0.9
-epochs = 1
+epochs = 3
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(fcn.parameters() ,lr = learning_rate, momentum = 0.9)
@@ -91,9 +90,10 @@ for t in range(epochs):
     #print(train_ex[idx,:,:,:].size())
     #print(label_ex[idx,:,:,:].size())
     inputs = Variable(train_ex[idx,:,:,:])
-    labels = Variable(label_ex[idx,:,:].view(num_samples*dim1*dim2))
-    fcnOut = fcn.forward(inputs)
-    outputs = fcn.forwardLoss(fcnOut, num_samples, dim1, dim2, num_chan)
+    labelsND = Variable(label_ex[idx,:,:])
+    labels = labelsND.view(num_samples * dim1 * dim2)
+    outputsND = fcn.forward(inputs)
+    outputs = fcn.forwardLoss(outputsND, num_samples, dim1, dim2, num_chan)
 
     #print(outputs.size())
     #print(label.size())
@@ -113,11 +113,10 @@ for t in range(epochs):
 
     acc = torch.sum(val_labels==valid_lb[0:num_val_samps,:,:])/(dim1*dim2*num_val_samps*1.0)
 
-    train_out_labels = torch.max(fcnOut.data[0:num_val_samps], 1)[1]
-    train_acc = torch.sum(train_out_labels==labels.data[0:num_val_samps])/(dim1*dim2*num_val_samps*1.0)
+    train_out_labels = torch.max(outputs.data, 1)[1]
+    train_acc = (torch.sum(train_out_labels == labels.data))/(len(labels))
+    print('epoch: %d, iter:%d, loss: %.3f, accuracy: %.5f, train_accuracy: %.5f' % (t,i, loss.cpu().data[0],acc, train_acc))
 
-  print('epoch: %d, loss: %.3f, accuracy: %.5f, train_accuracy: %.5f' % (t,loss.cpu().data[0],acc, train_acc))
 
-
-#fcn.save_state_dict('training.pt')
+torch.save(fcn.state_dict(), 'training.pt')
 
