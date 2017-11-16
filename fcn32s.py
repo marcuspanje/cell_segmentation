@@ -147,6 +147,10 @@ class FCN32s(nn.Module):
 
         return h
 
+    def forwardLoss(self, x, num_samples, dim1, dim2, num_chan):
+      x = x.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2, num_chan)
+      return x
+
     def copy_params_from_vgg16(self, vgg16):
         features = [
             self.conv1_1, self.relu1_1,
