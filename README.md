@@ -1,7 +1,7 @@
 # cell_segmentation
 
 ## DRN training
-python segment.py train -d [dataset directory] -c 3 -s 360 --arch drn_d_22 --batch-size 16 --epochs 250 --lr 0.001 --momentum 0.99 --step 100
+python3 segment.py train -d [dataset directory] -c 3 -s 360 --arch drn_d_22 --batch-size 16 --epochs 250 --lr 0.001 --momentum 0.99 --step 100
 
 -c: number of classes \
 -s: crop size for data augmentation (default value of 0 was leading to an error) \
