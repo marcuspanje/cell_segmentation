@@ -1,7 +1,11 @@
 #various util functions
+import torch
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from PIL import Image
+import numpy as np
+from scipy import misc
+import json
 
 #input: fileName string,
 #output: corresponding labeled fileName string
@@ -17,7 +21,7 @@ def getLabeledName(fName):
 #input: filename of an image
 #loads, transforms image for nnet 
 #output: pytorch tensor 
-def load(name, dtype):
+def load(name, dtype=torch.FloatTensor):
   im = Image.open(name)
   
   loader = transforms.Compose([
@@ -25,9 +29,69 @@ def load(name, dtype):
     transforms.Scale((224,224)),  # scale to VGG input size
     transforms.ToTensor()])
 
-  im = Variable(loader(im)).type(dtype)
-  im = im.unsqueeze(0)
+  im = loader(im).type(dtype)
+  #im = im.unsqueeze(0)
   return im
 
 
 
+#input: filename
+#output: pytorch tensor with output variables
+def get_labels(fn, dtype=torch.FloatTensor):
+  label_im = load(fn, dtype).numpy()
+  
+  #Labeling scheme:
+  #0 tumor cells, 1 non-tumor cells, 2 other
+  isnotblack =  np.logical_or((label_im[0,:,:] > 50.0/256.0), (label_im[1,:,:] > 50.0/256.0))
+  isblack = np.logical_not(isnotblack)
+  isred = isnotblack * (label_im[0,:,:] > label_im[1,:,:])
+  isgreen = isnotblack * (label_im[0,:,:] < label_im[1,:,:])
+  label_arr =  0*isred + 1*isgreen + 2*isblack
+
+  return torch.from_numpy(label_arr).type(dtype)
+
+#net_output is a B x C x H x W tensor, where
+#B is batch size, and C is the number of classes
+#returns a B x H x W, tensor containing the class index that has
+#the highest score.
+def get_pixel_classes(net_output):
+  return torch.max(net_output, 1)[1]
+
+#from a WxH tensor containing classes for each pixel,
+#write a HxW jpeg image, where each class corresponds to a color
+def write_image_from_scores(pixel_class, name):
+  #first transpose
+  #pixel_class = pixel_class.numpy().transpose()
+  pixel_class = pixel_class.numpy()
+  H,W = pixel_class.shape
+  isRed = pixel_class == 0
+  isGreen = pixel_class == 1
+  isBlack = pixel_class == 2
+  red = np.array([190, 0, 0])
+  black = np.array([0,0,0])
+  green = np.array([0,255,0])
+  im = np.zeros((H,W,3))
+  im[isRed] = red
+  im[isGreen] = green
+  im[isBlack] = black
+  misc.imsave(name, im)
+
+ 
+'''
+with open('fileNames.json') as f: 
+  allNames = json.load(f)  
+  
+n = allNames['train'][0]
+print(n)
+im = load(n)
+'''
+  
+
+   
+  
+  
+  
+  
+  
+  
+                                            
