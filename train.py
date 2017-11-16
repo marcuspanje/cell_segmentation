@@ -35,13 +35,19 @@ batch_size = 16
 dim1, dim2, num_chan= 224, 224, 3
 
 num_train = len(allNames['train'])
+num_validate = len(allNames['validate'])
 num_batch = int(math.ceil(num_train/batch_size))
 
 train_ex = torch.FloatTensor(num_train, num_chan, dim2, dim1).type(dtype)
 label_ex = torch.LongTensor(num_train, dim2, dim1).type(torch.LongTensor)
+valid_ex = torch.FloatTensor(num_validate, num_chan, dim2, dim1).type(dtype)
+valid_lb = torch.LongTensor(num_validate, dim2, dim1).type(torch.LongTensor)
+
 if use_cuda:
   label_ex = label_ex.cuda()
   train_ex = train_ex.cuda()
+  valid_ex = valid_ex.cuda()
+  valid_lb = valid_lb.cuda()
   fcn = fcn.cuda()
 
 for i in range(len(allNames['train'])):
@@ -49,12 +55,17 @@ for i in range(len(allNames['train'])):
   train_ex[i] = load(filename, dtype)
   label_ex[i] = get_labels(getLabeledName(filename), torch.LongTensor)
 
+for i in range(len(allNames['validate'])):
+  filename = allNames['validate'][i]
+  valid_ex[i] = load(filename, dtype)
+  valid_lb[i] = get_labels(getLabeledName(filename), torch.LongTensor)
+  
 train_indices = np.arange(num_train)
 np.random.shuffle(train_indices)
 
-learning_rate = 1e-4
+learning_rate = 1e-3
 momentum = 0.9
-epochs = 1
+epochs = 2
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(fcn.parameters() ,lr = learning_rate, momentum = 0.9)
@@ -80,14 +91,22 @@ for t in range(epochs):
     labels = Variable(label_ex[idx,:,:].view(num_samples*dim1*dim2))
     outputs = fcn(inputs).permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2, num_chan)
 
-    
+        
     #print(outputs.size())
     #print(label.size())
     loss = criterion(outputs, labels)
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    print('epoch: %d, batch: %d, loss: %.3f' % (t,i,loss.data[0]))
+
+    #compute validation accuracy
+    num_val_samps = 4
+    val_input = Variable(valid_ex[0:num_val_samps,:,:,:])
+    val_output = fcn(val_input)
+    val_labels = torch.max(val_output.data,1)[1]
+
+    acc = torch.sum(val_labels==valid_lb[0:num_val_samps,:,:])/(dim1*dim2*num_val_samps*1.0)
+    print('epoch: %d, batch: %d, loss: %.3f, accuracy: %.5f' % (t,i,loss.data[0],acc))
 
 
 
