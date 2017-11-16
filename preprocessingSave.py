@@ -15,8 +15,8 @@ import random
 #Change this to your local directory
 data_dir = "/home/DeeptiM/cs221/cell_segmentation/cs221_dataset/"
 phase = "test"
-list_path = join(data_dir, phase + "_labels.txt")
-processed_dir = "/home/DeeptiM/cs221/cell_segmentation/cs221_dataset/processedLabels"
+list_path = join(data_dir, phase + "_labels_orig.txt")
+
 assert exists(list_path)
 
 # read file path names from file
