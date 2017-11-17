@@ -3,5 +3,6 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 
-echo hello
+echo start
 ./train1.py
+echo done

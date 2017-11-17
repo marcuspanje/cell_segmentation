@@ -19,9 +19,10 @@ print("use_cuda: {}".format(use_cuda))
 dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
     
-vgg16 = models.vgg16(True)
+vgg16 = models.vgg16()
 fcn = FCN32s(3)
-fcn.copy_params_from_vgg16(vgg16)
+fcn.load_state_dict(torch.load('training.pt'))
+print('loaded saved model')
 
 with open('fileNames.json', 'r') as f:
   allNames = json.load(f)
@@ -30,7 +31,7 @@ with open('fileNames.json', 'r') as f:
 # dim1 - horizontal dimension
 # dim2 - vertical dimension
 # num_chan - RGB dimension
-batch_size = 16
+batch_size = 2
 dim1, dim2, num_chan= 224, 224, 3
 
 num_train = len(allNames['train'])
@@ -58,7 +59,7 @@ np.random.shuffle(train_indices)
 
 learning_rate = 3e-3
 momentum = 0.9
-epochs = 100
+epochs = 1
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(fcn.parameters() ,lr = learning_rate, momentum = 0.9)
@@ -115,8 +116,8 @@ for t in range(epochs):
 
     train_out_labels = torch.max(outputs.data, 1)[1]
     train_acc = (torch.sum(train_out_labels == labels.data))/(len(labels))
-    print('epoch: %d, iter:%d, loss: %.3f, accuracy: %.3f, train_accuracy: %.3f' % (t,i, loss.cpu().data[0],acc, train_acc))
+    print('epoch: %d, iter:%d, loss: %.3f, accuracy: %.5f, train_accuracy: %.5f' % (t,i, loss.cpu().data[0],acc, train_acc))
 
 
-torch.save(fcn.state_dict(), 'training.pt')
+#torch.save(fcn.state_dict(), 'training.pt')
 

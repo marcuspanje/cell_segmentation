@@ -13,7 +13,7 @@ import random
 
 
 #Change this to your local directory
-data_dir = "/home/DeeptiM/cs221/cell_segmentation/cs221_dataset/"
+data_dir = "cs221_dataset/"
 phase = "test"
 list_path = join(data_dir, phase + "_labels_orig.txt")
 
@@ -24,9 +24,10 @@ if exists(list_path):
   label_list = [line.strip() for line in open(list_path, 'r')]
 
 for label_file in label_list:
-  label_img = Image.open(join(data_dir, label_file))
-  img_array = np.zeros((720, 1128, 3))
-  img_array[:,:,:] = label_img
+  #label_img = Image.open(join(data_dir, label_file))
+  #jimg_array = np.zeros((720, 1128, 3))
+  #img_array[:,:,:] = label_img
+  img_array = misc.imread(data_dir + label_file)
   # process array
   isnotblack =  np.logical_or((img_array[:,:,0] > 50), (img_array[:,:,1] > 50))
   isblack = np.logical_not(isnotblack)
@@ -35,7 +36,10 @@ for label_file in label_list:
   new_array =  0*isred + 1*isgreen + 2*isblack
   file_parts = label_file.split("/")
   part_label_file = "/".join(file_parts[:-2])
-  new_label_file = data_dir + part_label_file + "/labeled_preprocess/" + file_parts[-1]
-  #print (new_label_file)
-  misc.imsave(new_label_file, new_array)
+  new_label_file = data_dir + part_label_file + "/labeled_preprocess_2/" + file_parts[-1]
+  #save without normalizing pixel values
+  new_label_file = new_label_file[0:-3] + 'png'
+  misc.toimage(new_array, cmin=0, cmax=255).save(new_label_file)
+  print (new_label_file)
+
 print (phase + " done")
