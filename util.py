@@ -85,13 +85,3 @@ n = allNames['train'][0]
 print(n)
 im = load(n)
 '''
-  
-
-   
-  
-  
-  
-  
-  
-  
-                                            
