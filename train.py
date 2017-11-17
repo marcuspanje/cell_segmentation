@@ -16,7 +16,7 @@ from fcn32s import FCN32s
 
 use_cuda = torch.cuda.is_available() 
 print("use_cuda: {}".format(use_cuda))
-dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
+dtype = torch.FloatTensor #if use_cuda else torch.FloatTensor
 
     
 vgg16 = models.vgg16(True)
@@ -38,17 +38,10 @@ num_train = len(allNames['train'])
 num_validate = len(allNames['validate'])
 num_batch = int(math.ceil(num_train/batch_size))
 
-train_ex = torch.FloatTensor(num_train, num_chan, dim2, dim1).type(dtype)
+train_ex = torch.FloatTensor(num_train, num_chan, dim2, dim1)
 label_ex = torch.LongTensor(num_train, dim2, dim1).type(torch.LongTensor)
-valid_ex = torch.FloatTensor(num_validate, num_chan, dim2, dim1).type(dtype)
+valid_ex = torch.FloatTensor(num_validate, num_chan, dim2, dim1)
 valid_lb = torch.LongTensor(num_validate, dim2, dim1).type(torch.LongTensor)
-
-if use_cuda:
-  label_ex = label_ex.cuda()
-  train_ex = train_ex.cuda()
-  valid_ex = valid_ex.cuda()
-  valid_lb = valid_lb.cuda()
-  fcn = fcn.cuda()
 
 for i in range(len(allNames['train'])):
   filename = allNames['train'][i]
@@ -59,7 +52,14 @@ for i in range(len(allNames['validate'])):
   filename = allNames['validate'][i]
   valid_ex[i] = load(filename, dtype)
   valid_lb[i] = get_labels(getLabeledName(filename), dtype).type(torch.LongTensor)
-  
+
+if use_cuda:
+  label_ex = label_ex.cuda()
+  train_ex = train_ex.cuda()
+  valid_ex = valid_ex.cuda()
+  valid_lb = valid_lb.cuda()
+  fcn = fcn.cuda()
+            
 train_indices = np.arange(num_train)
 np.random.shuffle(train_indices)
 
