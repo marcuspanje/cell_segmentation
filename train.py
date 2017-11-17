@@ -53,26 +53,31 @@ if use_cuda:
 for i in range(len(allNames['train'])):
   filename = allNames['train'][i]
   train_ex[i] = load(filename, dtype)
-  label_ex[i] = get_labels(getLabeledName(filename), torch.LongTensor)
+  label_ex[i] = get_labels(getLabeledName(filename), dtype).type(torch.LongTensor)
 
 for i in range(len(allNames['validate'])):
   filename = allNames['validate'][i]
   valid_ex[i] = load(filename, dtype)
-  valid_lb[i] = get_labels(getLabeledName(filename), torch.LongTensor)
+  valid_lb[i] = get_labels(getLabeledName(filename), dtype).type(torch.LongTensor)
   
 train_indices = np.arange(num_train)
 np.random.shuffle(train_indices)
 
-learning_rate = 3e-3
+learning_rate = 1e-4
 momentum = 0.9
-epochs = 200
+epochs = 50
 
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(fcn.parameters() ,lr = learning_rate, momentum = 0.9)
+optimizer = torch.optim.Adam(fcn.parameters() ,lr = learning_rate)
 print('learning starting')
+
+
+acc_loss_file = open('acc_losses.txt', 'w')
 
 for t in range(epochs):
 
+  accuracies = []
+  losses = []
   #make sure we iterate over the dataset once
   for i in range(num_batch):
     start_idx = (i*batch_size)%num_train
@@ -85,15 +90,14 @@ for t in range(epochs):
       idx = idx.cuda()
     
     num_samples = len(idx)
-    #print(train_ex[idx,:,:,:].size())
-    #print(label_ex[idx,:,:,:].size())
     inputs = Variable(train_ex[idx,:,:,:])
     labels = Variable(label_ex[idx,:,:].view(num_samples*dim1*dim2))
-    outputs = fcn(inputs)
-    outputs = fcn.forwardLoss(outputs, num_samples, dim1, dim2, num_chan)
+    outputs = fcn.forward(inputs, num_samples, dim1, dim2, num_chan)
+    #outputs_loss = outputs.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2, num_chan)
 
-    #print(outputs.size())
-    #print(label.size())
+    #print('output')
+    #print(outputs.data[0])
+        
     loss = criterion(outputs, labels)
     optimizer.zero_grad()
     loss.backward()
@@ -102,15 +106,36 @@ for t in range(epochs):
     #compute validation accuracy
     num_val_samps = 4
     val_input = Variable(valid_ex[0:num_val_samps,:,:,:])
-    val_output = fcn(val_input)
+    val_output = fcn.forward_without_permute(val_input)
     val_labels = torch.max(val_output.data,1)[1]
 
+    #print('validate')
+    #print(val_output.data[0])
+
+    #print('validate argmax')
+    #print(val_labels)
+
+    #print('ground truth labels')
+    #print(valid_lb[0:num_val_samps,:,:])
+    
     acc = torch.sum(val_labels==valid_lb[0:num_val_samps,:,:])/(dim1*dim2*num_val_samps*1.0)
+    #print('epoch: %d, batch: %d, loss: %.3f, accuracy: %.5f' % (t,i,loss.data[0],acc))
+
+    accuracies.append(acc)
+    losses.append(loss.data[0])
+
+  avg_batch_acc  = sum(accuracies)/len(accuracies)
+  avg_batch_loss = sum(losses)/len(losses)
+  acc_loss_file.write("%d,%.3f,%.5f\n" % (t,avg_batch_loss,avg_batch_acc))  
+  print('epoch: %d, loss: %.3f, accuracy: %.5f' % (t,avg_batch_loss,avg_batch_acc))
 
 
-  print('epoch: %d, batch: %d, loss: %.3f, accuracy: %.5f' % (t,i,loss.data[0],acc))
+torch.save(fcn.state_dict(), 'trained_model.pth')
 
 
-fcn.save_state_dict('training.pt')
+  
+
+
+
 
 

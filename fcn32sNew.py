@@ -109,8 +109,7 @@ class FCN32s(nn.Module):
                     m.in_channels, m.out_channels, m.kernel_size[0])
                 m.weight.data.copy_(initial_weight)
 
-
-    def forward_without_permute(self, x):
+    def forward(self, x):
         h = x
         h = self.relu1_1(self.conv1_1(h))
         h = self.relu1_2(self.conv1_2(h))
@@ -119,12 +118,12 @@ class FCN32s(nn.Module):
         h = self.relu2_1(self.conv2_1(h))
         h = self.relu2_2(self.conv2_2(h))
         h = self.pool2(h)
-                                                                        
+
         h = self.relu3_1(self.conv3_1(h))
         h = self.relu3_2(self.conv3_2(h))
         h = self.relu3_3(self.conv3_3(h))
         h = self.pool3(h)
-        
+
         h = self.relu4_1(self.conv4_1(h))
         h = self.relu4_2(self.conv4_2(h))
         h = self.relu4_3(self.conv4_3(h))
@@ -140,20 +139,17 @@ class FCN32s(nn.Module):
 
         h = self.relu7(self.fc7(h))
         h = self.drop7(h)
-        
+
         h = self.score_fr(h)
-        
+
         h = self.upscore(h)
         h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
 
         return h
-         
-         
-    def forward(self, x, num_samples, dim1, dim2, num_chan):
-        h = self.forward_without_permute(x)
-        h = h.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2,num_chan)
-        return h
 
+    def forwardLoss(self, x, num_samples, dim1, dim2, num_chan):
+      x = x.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2, num_chan)
+      return x
 
     def copy_params_from_vgg16(self, vgg16):
         features = [

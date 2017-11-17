@@ -76,7 +76,7 @@ def write_image_from_scores(pixel_class, name):
   im[isBlack] = black
   misc.imsave(name, im)
 
- 
+''' 
 with open('fileNames.json') as f: 
   allNames = json.load(f)  
   
@@ -84,10 +84,12 @@ n = allNames['train'][0]
 n = 'cs221_dataset/VGH_Training/labeled/3_268_8_2.jpg'
 print(n)
 im = load(n)
+
 pixel_class = get_labels(n)
 write_image_from_scores(pixel_class, 'out.jpg')
+'''
 
 
   
 
-   
+  
