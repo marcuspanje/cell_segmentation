@@ -65,7 +65,7 @@ np.random.shuffle(train_indices)
 
 learning_rate = 1e-4
 momentum = 0.9
-epochs = 50
+epochs = 2
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(fcn.parameters() ,lr = learning_rate)

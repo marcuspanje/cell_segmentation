@@ -4,5 +4,5 @@
 #SBATCH --gres=gpu:1
 
 echo start
-./train1.py
+./train.py
 echo done
