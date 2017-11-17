@@ -57,7 +57,7 @@ def get_labels(fn, dtype=torch.FloatTensor):
 def get_pixel_classes(net_output):
   return torch.max(net_output, 1)[1]
 
-#from a WxH tensor containing classes for each pixel,
+#from a HxW tensor containing classes for each pixel,
 #write a HxW jpeg image, where each class corresponds to a color
 def write_image_from_scores(pixel_class, name):
   #first transpose
@@ -76,12 +76,20 @@ def write_image_from_scores(pixel_class, name):
   im[isBlack] = black
   misc.imsave(name, im)
 
- 
-'''
+''' 
 with open('fileNames.json') as f: 
   allNames = json.load(f)  
   
 n = allNames['train'][0]
+n = 'cs221_dataset/VGH_Training/labeled/3_268_8_2.jpg'
 print(n)
 im = load(n)
+
+pixel_class = get_labels(n)
+write_image_from_scores(pixel_class, 'out.jpg')
 '''
+
+
+  
+
+  
