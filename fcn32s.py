@@ -150,9 +150,9 @@ class FCN32s(nn.Module):
          
          
     def forward(self, x, num_samples, dim1, dim2, num_chan):
-        h = self.forward_without_permute(x)
-        h = h.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2,num_chan)
-        return h
+        hscores = self.forward_without_permute(x)
+        h = hscores.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2,num_chan)
+        return (h, hscores)
 
 
     def copy_params_from_vgg16(self, vgg16):

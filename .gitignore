@@ -9,3 +9,5 @@ stuff
 .nfs*
 slurm*.out
 *.pt
+*.pth
+out/
