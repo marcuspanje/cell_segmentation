@@ -11,3 +11,4 @@ slurm*.out
 *.pt
 *.pth
 out/
+output_files*
