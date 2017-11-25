@@ -6,5 +6,5 @@
 
 echo start
 #./train.py
-./evaluate.py
+./trainStats.py
 echo done
