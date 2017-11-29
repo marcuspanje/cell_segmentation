@@ -5,6 +5,5 @@
 #SBATCH --output=out/slurm-%j.out
 
 echo start
-#./train.py
 ./trainStats.py
 echo done

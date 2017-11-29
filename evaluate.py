@@ -11,15 +11,15 @@ from PIL import Image
 import pdb
 import json
 from util import * 
-from fcn32s import FCN32s
+from fcn32stats import FCN32stats
 
 use_cuda = torch.cuda.is_available() 
 print("use_cuda: {}".format(use_cuda))
 dtype = torch.FloatTensor #if use_cuda else torch.FloatTensor
 
 vgg16 = models.vgg16(True)
-fcn = FCN32s(3)
-fcn.load_state_dict(torch.load('saved_models/trained_model_nov21.pth'))
+fcn = FCN32stats(3)
+fcn.load_state_dict(torch.load('saved_models/trained_model_stats_nov25.pth'))
 
 with open('fileNames.json', 'r') as f:
   allNames = json.load(f)

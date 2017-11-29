@@ -95,7 +95,7 @@ for t in range(epochs):
     num_samples = len(idx)
     inputs = Variable(train_ex[idx,:,:,:])
     labels = Variable(label_ex[idx,:,:].view(num_samples*dim1*dim2))
-    outputs, outputScores = fcn.forward(inputs, num_samples, dim1, dim2, num_chan)
+    outputs, outputScores = fcn.forward(inputs)
 
     #print('output')
     #print(outputs.data[0])
@@ -142,7 +142,7 @@ for t in range(epochs):
   print('epoch: %d, loss: %.3f, valid accuracy: %.5f, train accuracy: %.5f' % (t,avg_batch_loss,avg_batch_acc, avg_train_acc))
 
 
-torch.save(fcn.state_dict(), 'trained_model_stats.pth')
+torch.save(fcn.state_dict(), 'trained_model_stats_nov29.pth')
 
 
   

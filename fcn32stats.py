@@ -24,14 +24,20 @@ def get_upsampling_weight(in_channels, out_channels, kernel_size):
 
 class FCN32stats(nn.Module):
 
-    def __init__(self, n_class=3):
+    def __init__(self, n_class=3, n_stats_features=10):
         super(FCN32stats, self).__init__()
 
+        self.n_class = n_class
+        self.n_stats_features = n_stats_features
+        self.n_total_stats_features = 2*n_stats_features
+
         #stats1
-        self.stats_conv1_1 = nn.Conv2d(3, 10, 3, padding=1) 
+        self.stats_conv1_1 = nn.Conv2d(3, n_stats_features, 3, padding=1) 
         self.stats_relu1_1 = nn.ReLU(inplace=True)
-        self.stats_conv1_2 = nn.Conv2d(10, 10, 3, padding=1) 
+        self.stats_conv1_2 = nn.Conv2d(n_stats_features, n_stats_features, 3, padding=1) 
         self.stats_relu1_2 = nn.ReLU(inplace=True)
+        self.stats_conv1_3 = nn.Conv2d(n_stats_features, n_stats_features, 3, padding=1) 
+        self.stats_relu1_3 = nn.ReLU(inplace=True)
         
         # conv1
         self.conv1_1 = nn.Conv2d(3, 64, 3, padding=100)
@@ -40,43 +46,45 @@ class FCN32stats(nn.Module):
         self.relu1_2 = nn.ReLU(inplace=True)
         self.pool1 = nn.MaxPool2d(2, stride=2, ceil_mode=True)  # 1/2
 
+
+        nAddLayers = 2*n_stats_features #mean and std of each state feature 
         # conv2
         #add + 20 for additional stats layers
-        self.conv2_1 = nn.Conv2d(64 + 20, 128, 3, padding=1)
+        self.conv2_1 = nn.Conv2d(64 + nAddLayers, 128 + nAddLayers, 3, padding=1)
         self.relu2_1 = nn.ReLU(inplace=True)
-        self.conv2_2 = nn.Conv2d(128, 128, 3, padding=1)
+        self.conv2_2 = nn.Conv2d(128 + nAddLayers, 128 + nAddLayers, 3, padding=1)
         self.relu2_2 = nn.ReLU(inplace=True)
         self.pool2 = nn.MaxPool2d(2, stride=2, ceil_mode=True)  # 1/4
 
         # conv3
-        self.conv3_1 = nn.Conv2d(128, 256, 3, padding=1)
+        self.conv3_1 = nn.Conv2d(128 + nAddLayers, 256 + nAddLayers, 3, padding=1)
         self.relu3_1 = nn.ReLU(inplace=True)
-        self.conv3_2 = nn.Conv2d(256, 256, 3, padding=1)
+        self.conv3_2 = nn.Conv2d(256 + nAddLayers, 256 + nAddLayers, 3, padding=1)
         self.relu3_2 = nn.ReLU(inplace=True)
-        self.conv3_3 = nn.Conv2d(256, 256, 3, padding=1)
+        self.conv3_3 = nn.Conv2d(256 + nAddLayers, 256 + nAddLayers, 3, padding=1)
         self.relu3_3 = nn.ReLU(inplace=True)
         self.pool3 = nn.MaxPool2d(2, stride=2, ceil_mode=True)  # 1/8
 
         # conv4
-        self.conv4_1 = nn.Conv2d(256, 512, 3, padding=1)
+        self.conv4_1 = nn.Conv2d(256 + nAddLayers, 512 + nAddLayers, 3, padding=1)
         self.relu4_1 = nn.ReLU(inplace=True)
-        self.conv4_2 = nn.Conv2d(512, 512, 3, padding=1)
+        self.conv4_2 = nn.Conv2d(512 + nAddLayers, 512 + nAddLayers, 3, padding=1)
         self.relu4_2 = nn.ReLU(inplace=True)
-        self.conv4_3 = nn.Conv2d(512, 512, 3, padding=1)
+        self.conv4_3 = nn.Conv2d(512 + nAddLayers, 512 + nAddLayers, 3, padding=1)
         self.relu4_3 = nn.ReLU(inplace=True)
         self.pool4 = nn.MaxPool2d(2, stride=2, ceil_mode=True)  # 1/16
 
         # conv5
-        self.conv5_1 = nn.Conv2d(512, 512, 3, padding=1)
+        self.conv5_1 = nn.Conv2d(512 + nAddLayers, 512 + nAddLayers, 3, padding=1)
         self.relu5_1 = nn.ReLU(inplace=True)
-        self.conv5_2 = nn.Conv2d(512, 512, 3, padding=1)
+        self.conv5_2 = nn.Conv2d(512 + nAddLayers, 512 + nAddLayers, 3, padding=1)
         self.relu5_2 = nn.ReLU(inplace=True)
-        self.conv5_3 = nn.Conv2d(512, 512, 3, padding=1)
+        self.conv5_3 = nn.Conv2d(512 + nAddLayers, 512 + nAddLayers, 3, padding=1)
         self.relu5_3 = nn.ReLU(inplace=True)
         self.pool5 = nn.MaxPool2d(2, stride=2, ceil_mode=True)  # 1/32
 
         # fc6
-        self.fc6 = nn.Conv2d(512, 4096, 7)
+        self.fc6 = nn.Conv2d(512 + nAddLayers, 4096, 7)
         self.relu6 = nn.ReLU(inplace=True)
         self.drop6 = nn.Dropout2d()
 
@@ -109,10 +117,11 @@ class FCN32stats(nn.Module):
         sz = h.size()
         hstats = self.stats_relu1_1(self.stats_conv1_1(h))
         hstats = self.stats_relu1_2(self.stats_conv1_2(hstats))
+        hstats = self.stats_relu1_3(self.stats_conv1_3(hstats))
 
         #get mean and std dev of each filter
         hstats = hstats.contiguous()
-        hstats = hstats.view(sz[0],10,224*224)
+        hstats = hstats.view(sz[0],self.n_stats_features,224*224)
         hmean = torch.mean(hstats, 2, True) 
         hmean = hmean.unsqueeze(3)
         hmean = hmean.repeat(1,1,211,211)
@@ -166,8 +175,9 @@ class FCN32stats(nn.Module):
         return h
          
          
-    def forward(self, x, num_samples, dim1, dim2, num_chan):
+    def forward(self, x):
         hscores = self.forward_without_permute(x)
+        num_samples, num_chan, dim1, dim2 = hscores.data.shape
         h = hscores.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2,num_chan)
         return (h, hscores)
 
@@ -200,14 +210,21 @@ class FCN32stats(nn.Module):
                 #sizes are different now because of additional stats features, 
                 #so just copy the non-stats features from vgg
                 sz = l1.weight.data.size()
-                l2.weight.data[:,0:sz[1],:,:] = l1.weight.data
-                l2.bias.data = l1.bias.data
+                l2.weight.data[0:sz[0],0:sz[1],:,:] = l1.weight.data
+                l2.bias.data[0:l1.bias.data.size()[0]] = l1.bias.data
 
         for i, name in zip([0, 3], ['fc6', 'fc7']):
             l1 = vgg16.classifier[i]
             l2 = getattr(self, name)
-            l2.weight.data = l1.weight.data.view(l2.weight.size())
-            l2.bias.data = l1.bias.data.view(l2.bias.size())
+            #l2 now has more layers for fc6 because of stats features
+            #get correct sizes
+
+            l2sz = list(l2.weight.data.size())
+            if name == 'fc6':
+              l2sz[1] = l2sz[1]- 2*self.n_stats_features
+
+            l2.weight.data[:,0:l2sz[1],:,:] = l1.weight.data.view(l2sz)
+            l2.bias.data[0:l1.bias.data.size()[0]] = l1.bias.data
 
 
 

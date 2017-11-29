@@ -47,7 +47,7 @@ if use_cuda:
 print('learning starting')
 
 inputs = Variable(train_ex)
-outputs, outputScores = fcn.forward(inputs, num_samples, dim1, dim2, num_chan)
+outputs, outputScores = fcn.forward(inputs)
 
 
   
