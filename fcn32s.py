@@ -149,8 +149,9 @@ class FCN32s(nn.Module):
         return h
          
          
-    def forward(self, x, num_samples, dim1, dim2, num_chan):
+    def forward(self, x):
         hscores = self.forward_without_permute(x)
+        num_samples, num_chan, dim1, dim2 = hscores.data.shape
         h = hscores.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2,num_chan)
         return (h, hscores)
 

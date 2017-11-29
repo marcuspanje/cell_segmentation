@@ -19,7 +19,7 @@ dtype = torch.FloatTensor #if use_cuda else torch.FloatTensor
 
 vgg16 = models.vgg16(True)
 fcn = FCN32stats(3)
-fcn.load_state_dict(torch.load('saved_models/trained_model_stats_nov25.pth'))
+fcn.load_state_dict(torch.load('saved_models/trained_model_stats_nov29.pth'))
 
 with open('fileNames.json', 'r') as f:
   allNames = json.load(f)
@@ -41,7 +41,7 @@ if use_cuda:
 print('applying network to test images')
 
 test_ex = Variable(test_ex)
-output_classes = fcn.forward(test_ex, num_test, dim1, dim2, num_chan)[1].data
+output_classes = fcn.forward(test_ex)[1].data
 output_classes = get_pixel_classes(output_classes)
 
 for i in range(len(testNames)):

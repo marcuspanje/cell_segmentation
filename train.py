@@ -95,7 +95,7 @@ for t in range(epochs):
     num_samples = len(idx)
     inputs = Variable(train_ex[idx,:,:,:])
     labels = Variable(label_ex[idx,:,:].view(num_samples*dim1*dim2))
-    outputs, outputScores = fcn.forward(inputs, num_samples, dim1, dim2, num_chan)
+    outputs, outputScores = fcn.forward(inputs)
 
     #print('output')
     #print(outputs.data[0])
