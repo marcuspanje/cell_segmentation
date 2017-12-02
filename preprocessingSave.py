@@ -13,8 +13,8 @@ import random
 
 
 #Change this to your local directory
-data_dir = "cs221_dataset/"
-phase = "test"
+data_dir = "/home/DeeptiM/cs221/cell_segmentation/cs221_dataset/"
+phase = "val"
 list_path = join(data_dir, phase + "_labels_orig.txt")
 
 assert exists(list_path)
@@ -36,10 +36,11 @@ for label_file in label_list:
   new_array =  0*isred + 1*isgreen + 2*isblack
   file_parts = label_file.split("/")
   part_label_file = "/".join(file_parts[:-2])
-  new_label_file = data_dir + part_label_file + "/labeled_preprocess/" + file_parts[-1]
+  extension = file_parts[-1].split(".")
+  new_label_file = data_dir + part_label_file + "/labeled_preprocess/" + extension[0] + ".png"
   #save without normalizing pixel values
   #new_label_file = new_label_file[0:-3] + 'png'
   misc.toimage(new_array, cmin=0, cmax=255).save(new_label_file)
-  print (new_label_file)
+  #print (new_label_file)
 
 print (phase + " done")
