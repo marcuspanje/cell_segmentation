@@ -20,4 +20,3 @@ for phase in phases:
 				print (data_array.shape, np.min(data_array), np.max(data_array))
 			#assert np.min(data_array) >= 0
 			#assert np.max(data_array) < 3
-	

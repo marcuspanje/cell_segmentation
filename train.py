@@ -18,7 +18,6 @@ use_cuda = torch.cuda.is_available()
 print("use_cuda: {}".format(use_cuda))
 dtype = torch.FloatTensor #if use_cuda else torch.FloatTensor
 
-    
 vgg16 = models.vgg16(True)
 fcn = FCN32s(3)
 fcn.copy_params_from_vgg16(vgg16)
@@ -53,30 +52,34 @@ for i in range(len(allNames['validate'])):
   valid_ex[i] = load(filename, dtype)
   valid_lb[i] = get_labels(getLabeledName(filename), dtype).type(torch.LongTensor)
 
-if use_cuda:
-  label_ex = label_ex.cuda()
-  train_ex = train_ex.cuda()
-  valid_ex = valid_ex.cuda()
-  valid_lb = valid_lb.cuda()
-  fcn = fcn.cuda()
             
 train_indices = np.arange(num_train)
 np.random.shuffle(train_indices)
 
 learning_rate = 1e-4
 momentum = 0.9
-epochs = 2
+epochs = 100
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(fcn.parameters() ,lr = learning_rate)
-print('learning starting')
 
+if use_cuda:
+  label_ex = label_ex.cuda()
+  train_ex = train_ex.cuda()
+  valid_ex = valid_ex.cuda()
+  valid_lb = valid_lb.cuda()
+  fcn = fcn.cuda()
+  criterion.cuda()
+    
+
+print('learning starting')
 
 acc_loss_file = open('acc_losses.txt', 'w')
 
 for t in range(epochs):
 
-  accuracies = []
+  train_accuracies = []
+  valid_accuracies = []
   losses = []
   #make sure we iterate over the dataset once
   for i in range(num_batch):
@@ -92,8 +95,7 @@ for t in range(epochs):
     num_samples = len(idx)
     inputs = Variable(train_ex[idx,:,:,:])
     labels = Variable(label_ex[idx,:,:].view(num_samples*dim1*dim2))
-    outputs = fcn.forward(inputs, num_samples, dim1, dim2, num_chan)
-    #outputs_loss = outputs.permute(0,2,3,1).contiguous().view(num_samples*dim1*dim2, num_chan)
+    outputs, outputScores = fcn.forward(inputs)
 
     #print('output')
     #print(outputs.data[0])
@@ -103,31 +105,41 @@ for t in range(epochs):
     loss.backward()
     optimizer.step()
 
+    #compute train accuracy, loss
+    train_labels = torch.max(outputs.data, 1)[1].view(num_samples*dim1*dim2)
+    train_acc = torch.sum(train_labels == labels.data)/len(labels)
+    train_accuracies.append(train_acc)
+    losses.append(loss.data[0])
+
+    #deallocate memory 
+    inputs = None
+    train_labels = None
+    outputs = None
+    ouptutScores = None
+
     #compute validation accuracy
-    num_val_samps = 4
+    num_val_samps = num_validate
     val_input = Variable(valid_ex[0:num_val_samps,:,:,:])
     val_output = fcn.forward_without_permute(val_input)
     val_labels = torch.max(val_output.data,1)[1]
 
-    #print('validate')
-    #print(val_output.data[0])
-
-    #print('validate argmax')
-    #print(val_labels)
-
-    #print('ground truth labels')
-    #print(valid_lb[0:num_val_samps,:,:])
-    
-    acc = torch.sum(val_labels==valid_lb[0:num_val_samps,:,:])/(dim1*dim2*num_val_samps*1.0)
+    valid_acc = torch.sum(val_labels==valid_lb[0:num_val_samps,:,:])/(dim1*dim2*num_val_samps*1.0)
     #print('epoch: %d, batch: %d, loss: %.3f, accuracy: %.5f' % (t,i,loss.data[0],acc))
 
-    accuracies.append(acc)
-    losses.append(loss.data[0])
+    valid_accuracies.append(valid_acc)
 
-  avg_batch_acc  = sum(accuracies)/len(accuracies)
+    #deallocate memory
+    val_input = None
+    val_output = None
+    val_labels = None
+
+
+
+  avg_batch_acc  = sum(valid_accuracies)/len(valid_accuracies)
   avg_batch_loss = sum(losses)/len(losses)
-  acc_loss_file.write("%d,%.3f,%.5f\n" % (t,avg_batch_loss,avg_batch_acc))  
-  print('epoch: %d, loss: %.3f, accuracy: %.5f' % (t,avg_batch_loss,avg_batch_acc))
+  avg_train_acc = sum(train_accuracies)/len(train_accuracies)
+  #acc_loss_file.write("%d,%.3f,%.5f\n" % (t,avg_batch_loss,avg_batch_acc))  
+  print('epoch: %d, loss: %.3f, valid accuracy: %.5f, train accuracy: %.5f' % (t,avg_batch_loss,avg_batch_acc, avg_train_acc))
 
 
 torch.save(fcn.state_dict(), 'trained_model.pth')

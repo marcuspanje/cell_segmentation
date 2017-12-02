@@ -17,6 +17,12 @@ def getLabeledName(fName):
   labeledName = fName[0:i] + 'labeled/' + fName[i+2:]
   return labeledName
 
+def getOutputName(fName):
+  findString = 'Training/'
+  i = fName.find(findString) + len(findString)
+  outputName = 'output_files/' + fName[i+2:]
+  return outputName
+
 
 #input: filename of an image
 #loads, transforms image for nnet 
