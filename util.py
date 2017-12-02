@@ -43,6 +43,7 @@ def load(name, dtype=torch.FloatTensor):
 
 #input: filename
 #output: pytorch tensor with output variables
+#output is a HxW tensor. Each pixel value is: 0 (red), 1(green) or 2(black)
 def get_labels(fn, dtype=torch.FloatTensor):
   label_im = load(fn, dtype).numpy()
   
