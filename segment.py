@@ -49,7 +49,7 @@ CITYSCAPE_PALLETE = np.asarray([
     [0, 0, 0]], dtype=np.uint8)
 
 CELL_PALLETE = np.asarray([
-  [190,0,0],[0,0,0],[0,255,0]])
+  [190,0,0],[0,255,0],[0,0,0]], dtype=np.uint8)
 
 def fill_up_weights(up):
     w = up.weight.data
@@ -142,7 +142,6 @@ class SegList(torch.utils.data.Dataset):
 
 
 def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
-    print(val_loader)
     batch_time = AverageMeter()
     losses = AverageMeter()
     score = AverageMeter()
@@ -230,7 +229,6 @@ def train(train_loader, model, criterion, optimizer, epoch,
 
     end = time.time()
 
-    print('starting starting learning')
     for i, (input, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -311,7 +309,6 @@ def train_seg(args):
         single_model.load_state_dict(torch.load(args.pretrained))
     model = torch.nn.DataParallel(single_model).cuda()
     criterion = nn.NLLLoss2d(ignore_index=255)
-    print('criterion done')
 
     # Data loading code
     data_dir = args.data_dir
@@ -417,7 +414,6 @@ def save_output_images(predictions, filenames, output_dir):
     """
     # pdb.set_trace()
     for ind in range(len(filenames)):
-        print('ind: %d'%ind)
         im = Image.fromarray(predictions[ind].astype(np.uint8))
         fn = os.path.join(output_dir, filenames[ind])
         out_dir = split(fn)[0]
@@ -431,9 +427,7 @@ def save_colorful_images(predictions, filenames, output_dir, palettes):
    Saves a given (B x C x H x W) into an image file.
    If given a mini-batch tensor, will save the tensor as a grid of images.
    """
-   print('len filenames: %d' % len(filenames))
    for ind in range(len(filenames)):
-       print(len(predictions))
        im = Image.fromarray(palettes[predictions[ind].squeeze()])
        fn = os.path.join(output_dir, filenames[ind][:-4] + '.png')
        out_dir = split(fn)[0]
@@ -452,20 +446,19 @@ def test(eval_data_loader, model, num_classes,
     end = time.time()
     hist = np.zeros((num_classes, num_classes))
     for iter, (image, label, name) in enumerate(eval_data_loader):
-        print(name)
-        print(label.size())
         data_time.update(time.time() - end)
         image_var = Variable(image, requires_grad=False, volatile=True)
         final = model(image_var)[0]
-        print(final.size())
         _, pred = torch.max(final, 1)
-        print(pred.size())
         pred = pred.cpu().data.numpy()
+        label = label.cpu().numpy()
         batch_time.update(time.time() - end)
         if save_vis:
             save_output_images(pred, name, output_dir)
-            save_colorful_images(pred, name, output_dir + '_color',
-                                 CELL_PALLETE)
+            save_colorful_images(pred, name, output_dir + '_color', CELL_PALLETE)
+            #label_name = (name[0][0:-4] + '_label'  + name[0][-4:],)
+            #save_output_images(label, label_name, output_dir)
+            #save_colorful_images(label, label_name, output_dir + '_color',CELL_PALLETE)
         if has_gt:
             label = label.numpy()
             hist += fast_hist(pred.flatten(), label.flatten(), num_classes)
@@ -477,6 +470,7 @@ def test(eval_data_loader, model, num_classes,
               'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
               .format(iter, len(eval_data_loader), batch_time=batch_time,
                       data_time=data_time))
+
     if has_gt: #val
         ious = per_class_iu(hist) * 100
         print(' '.join('{:.03f}'.format(i) for i in ious))
