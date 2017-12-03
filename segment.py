@@ -48,6 +48,8 @@ CITYSCAPE_PALLETE = np.asarray([
     [119, 11, 32],
     [0, 0, 0]], dtype=np.uint8)
 
+CELL_PALLETE = np.asarray([
+  [190,0,0],[0,0,0],[0,255,0]])
 
 def fill_up_weights(up):
     w = up.weight.data
@@ -140,6 +142,7 @@ class SegList(torch.utils.data.Dataset):
 
 
 def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
+    print(val_loader)
     batch_time = AverageMeter()
     losses = AverageMeter()
     score = AverageMeter()
@@ -162,7 +165,7 @@ def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
-        # prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
+        #prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
         losses.update(loss.data[0], input.size(0))
         if eval_score is not None:
             score.update(eval_score(output, target_var), input.size(0))
@@ -227,6 +230,7 @@ def train(train_loader, model, criterion, optimizer, epoch,
 
     end = time.time()
 
+    print('starting starting learning')
     for i, (input, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -245,7 +249,7 @@ def train(train_loader, model, criterion, optimizer, epoch,
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
-        # prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
+        #prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
         losses.update(loss.data[0], input.size(0))
         if eval_score is not None:
             scores.update(eval_score(output, target_var), input.size(0))
@@ -258,7 +262,6 @@ def train(train_loader, model, criterion, optimizer, epoch,
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-
         if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -274,7 +277,23 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     if is_best:
         shutil.copyfile(filename, 'model_best.pth.tar')
 
+def one_pass(args):
+    batch_size = args.batch_size
+    #num_workers = args.workers
 
+    num_workers = 2
+    crop_size = args.crop_size
+
+    print(' '.join(sys.argv))
+
+    for k, v in args.__dict__.items():
+        print(k, ':', v)
+
+    single_model = DRNSeg(args.arch, args.classes, None,
+                          pretrained=True)
+
+    print('one pass done')
+  
 def train_seg(args):
     batch_size = args.batch_size
     num_workers = args.workers
@@ -287,12 +306,12 @@ def train_seg(args):
 
     single_model = DRNSeg(args.arch, args.classes, None,
                           pretrained=True)
+
     if args.pretrained:
         single_model.load_state_dict(torch.load(args.pretrained))
     model = torch.nn.DataParallel(single_model).cuda()
     criterion = nn.NLLLoss2d(ignore_index=255)
-
-    criterion.cuda()
+    print('criterion done')
 
     # Data loading code
     data_dir = args.data_dir
@@ -312,7 +331,7 @@ def train_seg(args):
     val_loader = torch.utils.data.DataLoader(
         SegList(data_dir, 'val', transforms.Compose([
             transforms.RandomCrop(crop_size),
-            # transforms.RandomHorizontalFlip(),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -344,19 +363,21 @@ def train_seg(args):
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     if args.evaluate:
-        validate(val_loader, model, criterion, eval_score=accuracy)
+        #validate(val_loader, model, criterion, eval_score=accuracy)
         return
 
+    print('starting learning')
     for epoch in range(start_epoch, args.epochs):
         lr = adjust_learning_rate(args, optimizer, epoch)
         print('Epoch: [{0}]\tlr {1:.06f}'.format(epoch, lr))
         # train for one epoch
+        
         train(train_loader, model, criterion, optimizer, epoch,
               eval_score=accuracy)
 
         # evaluate on validation set
         prec1 = validate(val_loader, model, criterion, eval_score=accuracy)
-
+        best_prec1 = 0
         is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1)
         checkpoint_path = 'checkpoint_latest.pth.tar'
@@ -366,7 +387,7 @@ def train_seg(args):
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
         }, is_best, filename=checkpoint_path)
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 1 == 0:
             history_path = 'checkpoint_{:03d}.pth.tar'.format(epoch + 1)
             shutil.copyfile(checkpoint_path, history_path)
 
@@ -396,6 +417,7 @@ def save_output_images(predictions, filenames, output_dir):
     """
     # pdb.set_trace()
     for ind in range(len(filenames)):
+        print('ind: %d'%ind)
         im = Image.fromarray(predictions[ind].astype(np.uint8))
         fn = os.path.join(output_dir, filenames[ind])
         out_dir = split(fn)[0]
@@ -409,7 +431,9 @@ def save_colorful_images(predictions, filenames, output_dir, palettes):
    Saves a given (B x C x H x W) into an image file.
    If given a mini-batch tensor, will save the tensor as a grid of images.
    """
+   print('len filenames: %d' % len(filenames))
    for ind in range(len(filenames)):
+       print(len(predictions))
        im = Image.fromarray(palettes[predictions[ind].squeeze()])
        fn = os.path.join(output_dir, filenames[ind][:-4] + '.png')
        out_dir = split(fn)[0]
@@ -417,6 +441,8 @@ def save_colorful_images(predictions, filenames, output_dir, palettes):
            os.makedirs(out_dir)
        im.save(fn)
 
+def testviz():
+  print('hi')
 
 def test(eval_data_loader, model, num_classes,
          output_dir='pred', has_gt=True, save_vis=False):
@@ -426,16 +452,20 @@ def test(eval_data_loader, model, num_classes,
     end = time.time()
     hist = np.zeros((num_classes, num_classes))
     for iter, (image, label, name) in enumerate(eval_data_loader):
+        print(name)
+        print(label.size())
         data_time.update(time.time() - end)
         image_var = Variable(image, requires_grad=False, volatile=True)
         final = model(image_var)[0]
+        print(final.size())
         _, pred = torch.max(final, 1)
+        print(pred.size())
         pred = pred.cpu().data.numpy()
         batch_time.update(time.time() - end)
         if save_vis:
             save_output_images(pred, name, output_dir)
             save_colorful_images(pred, name, output_dir + '_color',
-                                 CITYSCAPE_PALLETE)
+                                 CELL_PALLETE)
         if has_gt:
             label = label.numpy()
             hist += fast_hist(pred.flatten(), label.flatten(), num_classes)
@@ -546,6 +576,7 @@ def main():
     args = parse_args()
     if args.cmd == 'train':
         train_seg(args)
+        #one_pass(args)
     elif args.cmd == 'test':
         test_seg(args)
 

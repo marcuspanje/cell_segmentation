@@ -6,22 +6,7 @@ from PIL import Image
 import numpy as np
 from scipy import misc
 import json
-
-#input: fileName string,
-#output: corresponding labeled fileName string
-#eg: given 'cs221_dataset/VGH_Training/0.1_280_5_5.jpg', 
-#returns: 'cs221_dataset/VGH_Training/labeled/1_280_5_5.jpg'
-def getLabeledName(fName):
-  findString = 'Training/'
-  i = fName.find(findString) + len(findString)
-  labeledName = fName[0:i] + 'labeled/' + fName[i+2:]
-  return labeledName
-
-def getOutputName(fName):
-  findString = 'Training/'
-  i = fName.find(findString) + len(findString)
-  outputName = 'output_files/' + fName[i+2:]
-  return outputName
+from utilString import *
 
 
 #input: filename of an image
@@ -38,8 +23,6 @@ def load(name, dtype=torch.FloatTensor):
   im = loader(im).type(dtype)
   #im = im.unsqueeze(0)
   return im
-
-
 
 #input: filename
 #output: pytorch tensor with output variables

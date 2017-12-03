@@ -5,9 +5,9 @@ import torchvision.transforms as transforms
 with open('fileNames.json', 'r') as f:
   allNames = json.load(f)
 
-testNames = allNames['test']
+allNames = allNames['test'] + allNames['validate'] + allNames['train']
 
-for fname in testNames:
+for fname in allNames:
   print(fname)
   lname = getLabeledName(fname)
   im = load(fname)
