@@ -1,8 +1,10 @@
-##Various Instructions:
+## Various Instructions:
 
 **[Pytorch installation on Stanford Clusters](#pytorch-installation-on-stanford-clusters)**
 
 **[Generating Results](#generating-results)**
+
+**[Saving Images with DRN](#saving-images-with-drn)**
 
 ### PyTorch installation with GPU access on Stanford clusters
 
@@ -59,3 +61,8 @@ to the folder containing the images. Then run:
 `python generateResults.py`  
 `pdflatex results.tex`  
 The `results.pdf` should be produced.
+
+
+### Saving Images with DRN
+`python segment.py test -d cs221_dataset -c 3 --arch drn_d_22 --resume [chekpoint_file_name] --phase test --batch-size 1`
+
