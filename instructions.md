@@ -48,7 +48,10 @@ If everything works, you should see a printout of iteration step and losses, as 
 ...
 
 ### Generating Results
-`generateResults.py` generates a latex document with the image results. 
+First make sure `cropped_cs221_dataset` is unzipped:  
+`unzip cropped_cs221_dataset`
+
+To generate a latex document with the results, edit `generateResults.py`. 
 The first 2 columns are the raw image and ground truth.  
 The next 2 columns are 2 image result sources.  
 Set the `prefix1` and `prefix2` 
