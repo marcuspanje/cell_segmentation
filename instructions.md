@@ -1,4 +1,8 @@
-## PyTorch installation with GPU access on Stanford clusters
+##Various Instructions:
+**[Pytorch installation on Stanford Clusters](pytorch-installation-on-stanford-clusters)**
+**[Generating Results](generating-results)**
+
+### PyTorch installation with GPU access on Stanford clusters
 
 login to rice:
 `ssh [sunetid]@rice.stanford.edu`
@@ -40,3 +44,12 @@ If everything works, you should see a printout of iteration step and losses, as 
 1 40655632.0
 
 ...
+
+### Generating Results
+Edit `generateResults.py` generates a latex document with the image results. 
+The first 2 columns are the raw image and ground truth. 
+The next 2 columns are 2 image result sources. Set the `prefix1` and `prefix2` 
+to the folder containing the images. Then run:
+`python generateResults.py`
+`pdflatex results.tex`
+The `results.pdf` should be produced.
