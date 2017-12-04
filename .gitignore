@@ -2,7 +2,7 @@
 *.aux
 *.pdf
 *.swp
-cs221_dataset
+*cs221_dataset/
 __pycache__
 .DS_Store
 stuff
@@ -11,3 +11,5 @@ stuff
 *.pth
 out/
 output_files*
+*.tar
+pred_*
