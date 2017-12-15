@@ -49,7 +49,7 @@ CITYSCAPE_PALLETE = np.asarray([
     [0, 0, 0]], dtype=np.uint8)
 
 CELL_PALLETE = np.asarray([
-  [190,0,0],[0,255,0],[0,0,0]], dtype=np.uint8)
+    [190,0,0],[0,255,0],[0,0,0]], dtype=np.uint8)
 
 def fill_up_weights(up):
     w = up.weight.data
@@ -121,6 +121,9 @@ class SegList(torch.utils.data.Dataset):
         data = [Image.open(join(self.data_dir, self.image_list[index]))]
         if self.label_list is not None:
             data.append(Image.open(join(self.data_dir, self.label_list[index])))
+            #im_label = Image.open(join(self.data_dir, self.label_list[index]))
+            #im_label_array = np.array(im_label)
+            #print (im_label_array.shape, np.min(im_label_array), np.max(im_label_array))
         data = list(self.transforms(*data))
         if self.out_name:
             if self.label_list is None:
@@ -178,8 +181,8 @@ def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Score {score.val:.3f} ({score.avg:.3f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses,
-                   score=score), flush=True)
+                  i, len(val_loader), batch_time=batch_time, 
+                  loss=losses, score=score), flush=True)
 
     print(' * Score {top1.avg:.3f}'.format(top1=score))
 
@@ -318,7 +321,7 @@ def train_seg(args):
     train_loader = torch.utils.data.DataLoader(
         SegList(data_dir, 'train', transforms.Compose([
             transforms.RandomCrop(crop_size),
-            transforms.RandomHorizontalFlip(),
+#            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
         ])),
@@ -455,10 +458,8 @@ def test(eval_data_loader, model, num_classes,
         batch_time.update(time.time() - end)
         if save_vis:
             save_output_images(pred, name, output_dir)
-            save_colorful_images(pred, name, output_dir + '_color', CELL_PALLETE)
-            #label_name = (name[0][0:-4] + '_label'  + name[0][-4:],)
-            #save_output_images(label, label_name, output_dir)
-            #save_colorful_images(label, label_name, output_dir + '_color',CELL_PALLETE)
+            save_colorful_images(pred, name, output_dir + '_color',
+                                 CELL_PALLETE)
         if has_gt:
             label = label.numpy()
             hist += fast_hist(pred.flatten(), label.flatten(), num_classes)
