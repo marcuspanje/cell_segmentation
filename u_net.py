@@ -19,9 +19,9 @@ class _EncoderBlock(nn.Module):
     def __init__(self, in_channels, out_channels, dropout=False):
         super(_EncoderBlock, self).__init__()
         layers = [
-            #nn.ReLU(inplace=True),
-            #nn.BatchNorm2d(out_channels),
-            #nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(in_channels),
+            nn.ReLU(inplace=True),
             nn.Conv2d(in_channels, out_channels, kernel_size=3),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
@@ -53,23 +53,23 @@ class _DecoderBlock(nn.Module):
 class UNet(nn.Module):
     def __init__(self, num_classes):
         super(UNet, self).__init__()
-        self.enc1 = _EncoderBlock(3, 64)
-        self.enc2 = _EncoderBlock(64, 128)
-        self.enc3 = _EncoderBlock(128, 256)
-        self.enc4 = _EncoderBlock(256, 512, dropout=True)
-        self.center = _DecoderBlock(512, 1024, 512)
-        self.dec4 = _DecoderBlock(1024, 512, 256)
-        self.dec3 = _DecoderBlock(512, 256, 128)
-        self.dec2 = _DecoderBlock(256, 128, 64)
+        self.enc1 = _EncoderBlock(3, 32)
+        self.enc2 = _EncoderBlock(32, 64)
+        self.enc3 = _EncoderBlock(64, 128)
+        self.enc4 = _EncoderBlock(128, 256, dropout=True)
+        self.center = _DecoderBlock(256, 512, 256)
+        self.dec4 = _DecoderBlock(512, 256, 128)
+        self.dec3 = _DecoderBlock(256, 128, 64)
+        self.dec2 = _DecoderBlock(128, 64, 32)
         self.dec1 = nn.Sequential(
-            nn.Conv2d(128, 64, kernel_size=3),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 32, kernel_size=3),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(32, 32, kernel_size=3),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
         )
-        self.final = nn.Conv2d(64, num_classes, kernel_size=1)
+        self.final = nn.Conv2d(32, num_classes, kernel_size=1)
         initialize_weights(self)
 
     def forward_without_permute(self, x):

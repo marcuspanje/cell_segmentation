@@ -55,12 +55,12 @@ for i in range(len(allNames['validate'])):
 train_indices = np.arange(num_train)
 np.random.shuffle(train_indices)
 
-learning_rate = 1e-4
+learning_rate = 1e-3
 momentum = 0.9
 epochs = 100
 
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(fcn.parameters() ,lr = learning_rate)
+optimizer = torch.optim.SGD(net.parameters() ,lr = learning_rate, momentum = momentum)
 
 if use_cuda:
   label_ex = label_ex.cuda()
@@ -141,7 +141,7 @@ for t in range(epochs):
   print('epoch: %d, loss: %.3f, valid accuracy: %.5f, train accuracy: %.5f' % (t,avg_batch_loss,avg_batch_acc, avg_train_acc))
 
 
-torch.save(net.state_dict(), 'trained_model_unet.pth')
+torch.save(net.state_dict(), 'trained_model_unet_halved.pth')
 
 
   
